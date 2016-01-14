@@ -14,6 +14,8 @@ installed to a different port (8788 by default).
 Installation
 =====
 
+Make sure you have admin right and enviroment variables are updated.
+
 Run install.sh
 
 The EC2 API service gets installed on port 8788 by default. It can be changed
@@ -24,54 +26,12 @@ The services afterwards can be started as binaries:
 ::
 
  /usr/bin/ec2-api
- /usr/bin/ec2-api-metadata
- /usr/bin/ec2-api-s3
 
 or set up as Linux services.
 
-Installation in devstack:
-
-In order to install ec2-api with devstack the following should be added to
-the local.conf or localrc the following line:
-
-::
-
- enable_plugin ec2-api https://git.openstack.org/openstack/ec2-api
-
-To configure OpenStack for EC2 API metadata service:
-
-for Nova-network
-  add::
-
-    [DEFAULT]
-    metadata_port = 8789
-    [neutron]
-    service_metadata_proxy = True
-
-  to /etc/nova.conf
-
-  then restart nova-metadata (can be run as part of nova-api service) and
-  nova-network services.
-
-for Neutron
-  add::
-
-    [DEFAULT]
-    nova_metadata_port = 8789
-
-  to /etc/neutron/metadata_agent.ini
-
-  then restart neutron-metadata service.
-
-S3 server is intended only to support EC2 operations which require S3 server
-(e.g. CreateImage) in OpenStack deployments without regular object storage.
-It must not be used as a substitution for all-purposes object storage server.
-Do not start it if the deployment has its own object storage or uses a public
-one (e.g. AWS S3).
-
 Usage
 =====
-
+1.
 Download aws cli from Amazon.
 Create configuration file for aws cli in your home directory ~/.aws/config:
 
@@ -91,8 +51,18 @@ keystone with the new port 8788) like this:
 
 aws --endpoint-url http://10.0.2.15:8788 ec2 describe-instances
 
+2.
+Clone client git repository: https://github.com/anantkaushik89/client_v2_jcs
+in you ec2-api client machine.
 
-Limitations
+Follow below command to generate curl.
+
+./create_request.py "http://<IP>:<PORT>/service/Cloud/?Action=DescribeVpcs&Version=2015-10-01"
+
+Use generated curl.
+
+
+Limitations (From ec2-api documentation)
 ===========
 
 General:
@@ -207,45 +177,6 @@ Additions to the legacy nova's EC2 API include:
 2. Filtering
 3. Tags
 4. Paging
-
-Legacy OpenStack release notice
-===============================
-
-EC2 API supports Havana, Icehouse, Juno with additional limitations:
-
-Instance related:
- * rootDeviceName Instance property
- * kernelId Instance property
- * ramdiskId Instance property
- * userData Instance property
- * hostName Instance property
- * reservationId Reservation property (ec2api own ids are generated for
-   instances launched not by ec2api)
- * launchIndex Instance property (0 for instances launched not by ec2api)
-
-Volume related:
- * deleteOnTermination property
-
-Network interface related:
- * deleteOnTermination (False value can be assigned but doesn't supported)
-
-All these properties can be specified in RunInstance command though, they are
-not reported in describe operations.
-
-EC2 API supports Nova client (>=2.16.0) with no microversion support.
-Additional limitations are the same, except network interfaces'
-deleteOnTermination.
-
-
-Preferred way to run EC2 API in older releases is to run it in virtual environment:
- * create virtual environment by running command 'python tools/install_venv.py'
- * run install inside venv 'tools/with_venv.sh ./install.sh'
- * and then you need to run EC2 API services: 'ec2-api', 'ec2-api-metadata', and 'ec2-api-s3'
-Also you need to reconfigure metadata ports in nova(and neutron) config files
-if you want metadata to work correctly. (See 'Installation' section).
-After these steps you will have working EC2 API services at ports:
-8788 for EC2 API and 3334 for S3 API. Don't forget to change keystone endpoints
-if you want to run some automated scripts relying on keystone information.
 
 References
 ==========
