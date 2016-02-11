@@ -331,10 +331,10 @@ class AddressEngineNeutron(object):
                     filter=[{'name': 'attachment.vpc-id',
                              'value': [network_interface['vpc_id']]}])
                 ['internetGatewaySet'])
-            #if len(internet_gateways) == 0:
-            #    msg = _('Network %(vpc_id)s is not attached to any internet '
-            #            'gateway') % {'vpc_id': network_interface['vpc_id']}
-            #    raise exception.GatewayNotAttached(msg)
+            if len(internet_gateways) == 0:
+                msg = _('Network %(vpc_id)s is not attached to any internet '
+                        'gateway') % {'vpc_id': network_interface['vpc_id']}
+                raise exception.GatewayNotAttached(msg)
 
             with common.OnCrashCleaner() as cleaner:
                 _associate_address_item(context, address,

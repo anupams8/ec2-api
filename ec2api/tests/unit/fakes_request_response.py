@@ -17,7 +17,7 @@ from ec2api.tests.unit import tools
 
 XML_RESULT_TEMPLATE = '''
 <%(action)sResponse
-    xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/%(api_version)s/">
+    xmlns="http://ec2.amazonaws.com/doc/%(api_version)s/">
   <requestId>%(request_id)s</requestId>
   %(data)s
 </%(action)sResponse>'''
@@ -30,7 +30,7 @@ XML_ERROR_TEMPLATE = '''
 </Response>'''
 
 XML_FAKE_RESULT = '''<FakeActionResponse
-xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/2010-08-31/">
+xmlns="http://ec2.amazonaws.com/doc/2010-08-31/">
   <fakeInfo>
     <fakeNone/>
     <fakeTrue>true</fakeTrue>
@@ -97,7 +97,7 @@ DICT_FAKE_RESULT = {
 }
 
 XML_SINGLE_RESULT = '''
-<CreateSnapshotResponse xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/2009-11-30/">
+<CreateSnapshotResponse xmlns="http://ec2.amazonaws.com/doc/2009-11-30/">
   <requestId>req-8a80bb71-1e1d-49be-819f-fba429b0ddf1</requestId>
   <status>pending</status>
   <description/>
@@ -124,7 +124,7 @@ DICT_SINGLE_RESULT = {
 }
 
 XML_RESULT_SET = '''
-<DescribeImagesResponse xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/2010-08-31/">
+<DescribeImagesResponse xmlns="http://ec2.amazonaws.com/doc/2010-08-31/">
   <requestId>req-1fc541a8-477d-4928-a90e-4448ea57ba51</requestId>
   <imagesSet>
     <item>
@@ -245,7 +245,7 @@ DICT_RESULT_SET = {
 }
 
 XML_EMPTY_RESULT_SET = '''<?xml version="1.0" encoding="UTF-8"?>
-<DescribeVolumesResponse xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/2014-05-01/">
+<DescribeVolumesResponse xmlns="http://ec2.amazonaws.com/doc/2014-05-01/">
     <requestId>a25fa489-f97f-428a-9d30-9fcb1e9b9b65</requestId>
     <volumeSet/>
 </DescribeVolumesResponse>
@@ -275,7 +275,7 @@ DICT_ERROR = {
 }
 
 XML_SILENT_OPERATIN_RESULT = '''
-<DeleteVpcResponse xmlns="http://vpc.ind-west-1.jiocloudservices.com/doc/2009-11-30/">
+<DeleteVpcResponse xmlns="http://ec2.amazonaws.com/doc/2009-11-30/">
   <requestId>req-8a80bb71-1e1d-49be-819f-fba429b0ddf1</requestId>
   <return>true</return>
 </DeleteVpcResponse>

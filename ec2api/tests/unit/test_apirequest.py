@@ -44,7 +44,7 @@ class EC2RequesterTestCase(test_base.BaseTestCase):
         result = api_request.invoke(self.fake_context)
 
         self._compare_aws_xml('FakeActionResponse',
-                              'http://vpc.ind-west-1.jiocloudservices.com/doc/fake_v1/',
+                              'http://ec2.amazonaws.com/doc/fake_v1/',
                               self.fake_context.request_id,
                               fakes.DICT_FAKE_RESULT_DATA,
                               result)
@@ -59,7 +59,7 @@ class EC2RequesterTestCase(test_base.BaseTestCase):
         result = api_request.invoke(self.fake_context)
 
         self._compare_aws_xml('FakeActionResponse',
-                              'http://vpc.ind-west-1.jiocloudservices.com/doc/fake_v1/',
+                              'http://ec2.amazonaws.com/doc/fake_v1/',
                               self.fake_context.request_id,
                               {'return': True},
                               result)
@@ -92,7 +92,7 @@ class EC2RequesterTestCase(test_base.BaseTestCase):
             'int': 1,
         }
         data = req._render_response(resp, 'uuid')
-        self.assertIn('<FakeActionResponse xmlns="http://vpc.ind-west-1.jiocloudservices.com/'
+        self.assertIn('<FakeActionResponse xmlns="http://ec2.amazonaws.com/'
                       'doc/FakeVersion/', data)
         self.assertIn('<int>1</int>', data)
         self.assertIn('<string>foo</string>', data)
@@ -130,7 +130,7 @@ class EC2RequesterTestCase(test_base.BaseTestCase):
         result = api_request.invoke(self.fake_context)
 
         self._compare_aws_xml('FakeActionResponse',
-                              'http://vpc.ind-west-1.jiocloudservices.com/doc/2010-10-30/',
+                              'http://ec2.amazonaws.com/doc/2010-10-30/',
                               self.fake_context.request_id,
                               {},
                               result)
