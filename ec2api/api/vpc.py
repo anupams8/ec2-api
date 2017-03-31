@@ -40,8 +40,11 @@ LOG = logging.getLogger(__name__)
 
 Validator = common.Validator
 
+def get_vpc_ipv6_cidr(context):
+    #TODO: Ipv6 pool managmenet logic
+    return "2001:db8::1/56"
 
-def create_vpc(context, cidr_block, instance_tenancy='default'):
+def create_vpc(context, cidr_block, jcs_provided_ipv6_cidr_block=False, instance_tenancy='default'):
     subnet_ipnet = netaddr.IPNetwork(cidr_block)
     if subnet_ipnet.ip >= netaddr.IPNetwork("224.0.0.0/8").ip or (subnet_ipnet.is_loopback()):
 	raise exception.InvalidCidrRange(cidr_block=cidr_block)
@@ -58,9 +61,16 @@ def create_vpc(context, cidr_block, instance_tenancy='default'):
         except neutron_exception.OverQuotaClient:
             raise exception.VpcLimitExceeded()
         cleaner.addCleanup(neutron.delete_router, os_router['id'])
+        
+        if jcs_provided_ipv6_cidr_block == True:
+            jcs_provided_ipv6_cidr = get_vpc_ipv6_cidr(context)
+        else:
+            jcs_provided_ipv6_cidr = ''
+        
         vpc = db_api.add_item(context, 'vpc',
                               {'os_id': os_router['id'],
-                               'cidr_block': cidr_block})
+                               'cidr_block': cidr_block,
+                               'jcs_provided_ipv6_cidr_block':jcs_provided_ipv6_cidr})
         cleaner.addCleanup(db_api.delete_item, context, vpc['id'])
         #don't allow same CIDR in Multiple VPCs in the same Account
         vpcs = db_api.get_items(context, 'vpc')
@@ -133,7 +143,7 @@ class VpcDescriber(common.TaggableItemsDescriber,
                   'dhcp-options-id': 'dhcpOptionsId',
                   'is-default': 'isDefault',
                   'state': 'state',
-                  'vpc-id': 'vpcId'}
+                  'vpc-id': 'vpcId',}
 
     def format(self, item=None, os_item=None):
         return _format_vpc(item)
@@ -146,9 +156,12 @@ def describe_vpcs(context, vpc_id=None, filter=None):
 
 
 def _format_vpc(vpc):
+    if 'jcs_provided_ipv6_cidr_block' not in vpc :
+        vpc['jcs_provided_ipv6_cidr_block'] = 'False'
     return {'vpcId': vpc['id'],
             #'state': "available",
             'cidrBlock': vpc['cidr_block'],
+            'jcsProvidedIpv6CidrBlock': vpc['jcs_provided_ipv6_cidr_block'],
             #'isDefault': False,
             #'dhcpOptionsId': vpc.get('dhcp_options_id', 'default'),
             }

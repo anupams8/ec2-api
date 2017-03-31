@@ -1130,8 +1130,8 @@ class VpcCloudController(CloudController):
         Adds full VPC functionality which requires Neutron to work.
     """
 
-    @module_and_param_types(vpc, 'vpc_cidr', 'str255')
-    def create_vpc(self, context, cidr_block, instance_tenancy='default'):
+    @module_and_param_types(vpc, 'vpc_cidr', 'bool', 'str255')
+    def create_vpc(self, context, cidr_block, jcs_provided_ipv6_cidr_block=False, instance_tenancy='default'):
         """Creates a VPC with the specified CIDR block.
 
         Args:
@@ -1263,9 +1263,9 @@ class VpcCloudController(CloudController):
             A list of Internet gateways.
         """
 
-    @module_and_param_types(subnet, 'vpc_id', 'subnet_cidr',
+    @module_and_param_types(subnet, 'vpc_id', 'subnet_cidr','bool',
                             'str255')
-    def create_subnet(self, context, vpc_id, cidr_block,
+    def create_subnet(self, context, vpc_id, cidr_block, ipv6_cidr_block=False,
                       availability_zone=None):
         """Creates a subnet in an existing VPC.
 

@@ -94,7 +94,10 @@ def _format_ext_subnet(context, os_subnet, os_network):
         'allocation-pools': os_subnet['allocation_pools'],
     }
 
-def create_subnet(context, vpc_id, cidr_block,
+def get_ipv6_cidr_block(context,vpc_id):
+    return "2001:db8::8/64"
+
+def create_subnet(context, vpc_id, cidr_block,ipv6_cidr_block=False,
                   availability_zone=None):
     vpc = ec2utils.get_db_item(context, vpc_id)
     vpc_ipnet = netaddr.IPNetwork(vpc['cidr_block'])
@@ -138,31 +141,51 @@ def create_subnet(context, vpc_id, cidr_block,
             '''
             os_subnet = neutron.create_subnet(os_subnet_body)['subnet']
             cleaner.addCleanup(neutron.delete_subnet, os_subnet['id'])
+         
+            if ipv6_cidr_block == True:
+                ipv6_subnet_cidr_block = get_ipv6_cidr_block(context,vpc_id)
+	        os_subnet_body = {'subnet': {'network_id': os_network['id'],
+                                             'ip_version': '6',
+                                             'cidr': ipv6_subnet_cidr_block}}
+                os_subnet_v6 = neutron.create_subnet(os_subnet_body)['subnet']
+                cleaner.addCleanup(neutron.delete_subnet, os_subnet_v6['id'])
+             
+            else:
+                os_subnet_v6={'id': ''}
         except neutron_exception.OverQuotaClient:
             raise exception.SubnetLimitExceeded()
         try:
             print 'Adding interface to router'
             neutron.add_interface_router(vpc['os_id'],
                                          {'subnet_id': os_subnet['id']})
+            if ipv6_cidr_block == True:
+                neutron.add_interface_router(vpc['os_id'],
+                                             {'subnet_id': os_subnet_v6['id']})
         except neutron_exception.BadRequest:
             raise exception.InvalidSubnetConflict(cidr_block=cidr_block)
         cleaner.addCleanup(neutron.remove_interface_router,
                            vpc['os_id'], {'subnet_id': os_subnet['id']})
         subnet = db_api.add_item(context, 'subnet',
                                  {'os_id': os_subnet['id'],
-                                  'vpc_id': vpc['id']})
+                                  'vpc_id': vpc['id'],
+                                  'os_id_v6':os_subnet_v6['id']})
         cleaner.addCleanup(db_api.delete_item, context, subnet['id'])
         neutron.update_network(os_network['id'],
                                {'network': {'name': subnet['id']}})
         neutron.update_subnet(os_subnet['id'],
                               {'subnet': {'name': subnet['id']}})
+        if ipv6_cidr_block == True:
+            neutron.update_subnet(os_subnet_v6['id'],
+                                  {'subnet': {'name': subnet['id']+'_v6'}})
     os_ports = neutron.list_ports(tenant_id=context.project_id)['ports']
     return {'subnet': _format_subnet(context, subnet, os_subnet,
-                                     os_network, os_ports)}
+                                     os_network, os_ports, os_subnet_v6)}
 
 
 def delete_subnet(context, subnet_id):
     subnet = ec2utils.get_db_item(context, subnet_id)
+    if subnet.has_key('os_id_v6') and subnet['os_id_v6'] != '':
+        ipv6_cidr_block = True
     vpc = db_api.get_item_by_id(context, subnet['vpc_id'])
     network_interfaces = network_interface_api.describe_network_interfaces(
         context,
@@ -179,13 +202,22 @@ def delete_subnet(context, subnet_id):
         try:
             neutron.remove_interface_router(vpc['os_id'],
                                             {'subnet_id': subnet['os_id']})
+            if ipv6_cidr_block:
+                neutron.remove_interface_router(vpc['os_id'],
+                                                {'subnet_id': subnet['os_id']})
         except neutron_exception.NotFound:
             pass
         cleaner.addCleanup(neutron.add_interface_router,
                            vpc['os_id'],
                            {'subnet_id': subnet['os_id']})
+        if ipv6_cidr_block:
+            cleaner.addCleanup(neutron.add_interface_router,
+                               vpc['os_id'],
+                               {'subnet_id': subnet['os_id_v6']})
         try:
             os_subnet = neutron.show_subnet(subnet['os_id'])['subnet']
+            if ipv6_cidr_block:
+                os_subnet = neutron.show_subnet(subnet['os_id_v6'])['subnet']
         except neutron_exception.NotFound:
             pass
         else:
@@ -243,7 +275,7 @@ def describe_subnets(context, subnet_id=None, filter=None):
     return {'subnetSet': formatted_subnets}
 
 
-def _format_subnet(context, subnet, os_subnet, os_network, os_ports):
+def _format_subnet(context, subnet, os_subnet, os_network, os_ports, os_subnet_v6={}):
     status_map = {'ACTIVE': 'available',
                   'BUILD': 'pending',
                   'DOWN': 'available',
@@ -275,11 +307,14 @@ def _format_subnet(context, subnet, os_subnet, os_network, os_ports):
                     dhcp_port_accounted = True
     if not dhcp_port_accounted:
         ip_count -= 1
+    if not os_subnet_v6.has_key('cidr'):
+        os_subnet_v6['cidr'] = 'False'
     return {
         'subnetId': subnet['id'],
         #'state': status_map.get(os_network['status'], 'available'),
         'vpcId': subnet['vpc_id'],
         'cidrBlock': os_subnet['cidr'],
+        'cidrV6Block': os_subnet_v6['cidr'],
         #'defaultForAz': 'false',
         #'mapPublicIpOnLaunch': 'false',
         'availableIpAddressCount': ip_count
