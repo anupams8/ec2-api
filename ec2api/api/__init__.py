@@ -240,11 +240,36 @@ class EC2KeystoneAuth(wsgi.Middleware):
                                           "resource": "jrn:jcs:vpc::RouteTable:",
                                           "implicit_allow": "False"
                                        },
-                          'AllocateAddress': None,
-                          'AssociateAddress': None,
-                          'DisassociateAddress': None,
-                          'ReleaseAddress': None,
-                          'DescribeAddresses': None,
+                          'AllocateAddress':
+                                       {
+                                          "action": "jrn:jcs:vpc:AllocateAddress",
+                                          "resource": "jrn:jcs:vpc::Address:",
+                                          "implicit_allow": "False"
+                                       },
+                          'AssociateAddress':
+                                       {
+                                          "action": "jrn:jcs:vpc:AssociateAddress",
+                                          "resource": "jrn:jcs:vpc::Address:",
+                                          "implicit_allow": "False"
+                                       },
+                          'DisassociateAddress':
+                                       {
+                                          "action": "jrn:jcs:vpc:DisassociateAddress",
+                                          "resource": "jrn:jcs:vpc::Address:",
+                                          "implicit_allow": "False"
+                                       },
+                          'ReleaseAddress':
+                                       {
+                                          "action": "jrn:jcs:vpc:ReleaseAddress",
+                                          "resource": "jrn:jcs:vpc::Address:",
+                                          "implicit_allow": "False"
+                                       },
+                          'DescribeAddresses':
+                                       {
+                                          "action": "jrn:jcs:vpc:DescribeAddresses",
+                                          "resource": "jrn:jcs:vpc::Address:",
+                                          "implicit_allow": "False"
+                                       },
                           'CreateSecurityGroup':
                                        {
                                           "action": "jrn:jcs:vpc:CreateSecurityGroup",
